@@ -1,10 +1,20 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import time
 
-CLIENT_ID = "3e8926b4d02449e5b9ab84c00ab721a5"
-CLIENT_SECRET = "8c726df566994d5ea2de6df43858a059"
-REDIRECT_URI = "http://127.0.0.1:8888/callback/"
-SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-recently-played"
+# ------------------ CONFIG ------------------
+CLIENT_ID = "your_client_id_here"
+CLIENT_SECRET = "your_client_secret_here"
+REDIRECT_URI = "http://localhost:8888/callback"
+SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing"
+
+MOOD_PLAYLISTS = {
+    "happy": "37i9dQZF1DXdPec7aLTmlC",
+    "sad": "37i9dQZF1DX7qK8ma5wgG1",
+    "energetic": "37i9dQZF1DX1g0iEXLFycr",
+    "chill": "37i9dQZF1DX4WYpdgoIcn6",
+    "romantic": "37i9dQZF1DWVpvU5duQ5Wv"
+}
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=CLIENT_ID,
@@ -13,73 +23,97 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     scope=SCOPE
 ))
 
-def search_and_play():
-    query = input("🔎 Search for a song: ")
-    results = sp.search(q=query, limit=1, type='track')
-    if results['tracks']['items']:
-        track = results['tracks']['items'][0]
-        uri = track['uri']
-        name = track['name']
-        artist = track['artists'][0]['name']
-        print(f"🎶 Playing: {name} - {artist}")
-        sp.start_playback(uris=[uri])
-    else:
+def get_device_id():
+    devices = sp.devices()
+    for device in devices["devices"]:
+        if device["is_active"]:
+            return device["id"]
+    return None
+
+def play_mood_playlist(mood):
+    playlist_id = MOOD_PLAYLISTS.get(mood.lower())
+    if not playlist_id:
+        print("⚠️ Mood not found. Try happy, sad, energetic, chill, or romantic.")
+        return
+
+    device_id = get_device_id()
+    if not device_id:
+        print("⚠️ No active device found. Open Spotify and play a song once, then try again.")
+        return
+
+    sp.start_playback(device_id=device_id, context_uri=f"spotify:playlist:{playlist_id}")
+    print(f"🎵 Playing a {mood} playlist!")
+
+def search_and_play(song_name):
+    results = sp.search(q=song_name, type='track', limit=1)
+    tracks = results['tracks']['items']
+    if not tracks:
         print("❌ Song not found.")
+        return
 
-def pause():
-    sp.pause_playback()
-    print("⏸️ Paused.")
+    track_uri = tracks[0]['uri']
+    device_id = get_device_id()
+    if not device_id:
+        print("⚠️ No active device found. Open Spotify and try again.")
+        return
 
-def play():
-    sp.start_playback()
-    print("▶️ Resumed.")
+    sp.start_playback(device_id=device_id, uris=[track_uri])
+    print(f"🎶 Now playing: {tracks[0]['name']} - {tracks[0]['artists'][0]['name']}")
 
-def next_track():
-    sp.next_track()
-    print("⏭️ Next track.")
+def show_current_song():
+    current = sp.current_playback()
+    if current and current['item']:
+        name = current['item']['name']
+        artist = current['item']['artists'][0]['name']
+        print(f"🎧 Now playing: {name} - {artist}")
+    else:
+        print("🎧 No song is currently playing.")
 
-def previous_track():
-    sp.previous_track()
-    print("⏮️ Previous track.")
-
-def show_recent():
-    print("🕘 Recently Played Tracks:")
-    recent = sp.current_user_recently_played(limit=5)
-    for idx, item in enumerate(recent['items']):
-        track = item['track']
-        print(f"{idx + 1}. {track['name']} - {track['artists'][0]['name']}")
+def show_menu():
+    print("""
+🎵 Spotify Terminal Controller 🎵
+1️⃣ Play/Pause
+2️⃣ Next Track
+3️⃣ Previous Track
+4️⃣ Show Current Song
+5️⃣ Search and Play a Song
+6️⃣ Play Mood Playlist
+7️⃣ Exit
+    """)
 
 def main():
-    print("🎧 Welcome to Spotiterm 🎧")
     while True:
-        print("""
-📀 Menu:
-1. Search & Play a Song
-2. Pause
-3. Resume
-4. Next Track
-5. Previous Track
-6. Show Recently Played
-7. Exit
-        """)
-        choice = input("📌 Your choice: ").strip()
-        if choice == '1':
-            search_and_play()
-        elif choice == '2':
-            pause()
-        elif choice == '3':
-            play()
-        elif choice == '4':
-            next_track()
-        elif choice == '5':
-            previous_track()
-        elif choice == '6':
-            show_recent()
-        elif choice == '7':
-            print("👋 Bye!")
+        show_menu()
+        choice = input("📌 Choose an option (1-7): ").strip()
+
+        if choice == "1":
+            playback = sp.current_playback()
+            if playback and playback['is_playing']:
+                sp.pause_playback()
+                print("⏸️ Paused.")
+            else:
+                sp.start_playback()
+                print("▶️ Playing.")
+        elif choice == "2":
+            sp.next_track()
+            print("⏭️ Skipped to next track.")
+        elif choice == "3":
+            sp.previous_track()
+            print("⏮️ Went back to previous track.")
+        elif choice == "4":
+            show_current_song()
+        elif choice == "5":
+            song = input("🔍 Enter song name: ")
+            search_and_play(song)
+        elif choice == "6":
+            mood = input("💭 How are you feeling? (happy/sad/energetic/chill/romantic): ")
+            play_mood_playlist(mood)
+        elif choice == "7":
+            print("👋 Goodbye!")
             break
         else:
-            print("❌ Invalid choice.")
+            print("⚠️ Invalid choice. Try again.")
 
 if __name__ == "__main__":
     main()
+
