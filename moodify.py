@@ -1,13 +1,19 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
+import os
+from dotenv import load_dotenv
 
-# ------------------ CONFIG ------------------
-CLIENT_ID = "your_client_id_here"
-CLIENT_SECRET = "your_client_secret_here"
-REDIRECT_URI = "http://localhost:8888/callback"
+# Load environment variables from .env
+load_dotenv()
+
+# Load secrets
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
 SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing"
 
+# Mood-based playlists
 MOOD_PLAYLISTS = {
     "happy": "37i9dQZF1DXdPec7aLTmlC",
     "sad": "37i9dQZF1DX7qK8ma5wgG1",
@@ -16,6 +22,7 @@ MOOD_PLAYLISTS = {
     "romantic": "37i9dQZF1DWVpvU5duQ5Wv"
 }
 
+# Spotify client
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
