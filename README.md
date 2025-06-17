@@ -1,7 +1,7 @@
-🎵 Moodify - Terminal Spotify Controller with Mood-Based Music
+## 🎵 Moodify - Terminal Spotify Controller with Mood-Based Music
 Moodify is a terminal-based Python tool that lets you control Spotify and discover songs based on your mood — all from your command line.
 
-🌟 Features
+# 🌟 Features
 ⏯️ Play / pause, skip songs, show current track
 
 🔍 Search and play any song on Spotify
@@ -10,7 +10,7 @@ Moodify is a terminal-based Python tool that lets you control Spotify and discov
 
 💻 All from the terminal — no browser needed!
 
-📦 Requirements
+# 📦 Requirements
 Python 3.7+
 
 A Spotify Premium account
@@ -19,19 +19,16 @@ A registered Spotify Developer App
 
 Install the required libraries:
 
-bash
-Copy
-Edit
-pip install spotipy termcolor
-🛠️ Setup
+
+`pip install spotipy termcolor`
+# 🛠️ Setup
 Register your app at Spotify Developer Dashboard.
 
 Set the Redirect URI to:
 
-bash
-Copy
-Edit
+```
 http://localhost:8888/callback
+```
 Copy your Client ID and Client Secret.
 
 In your terminal, run:
